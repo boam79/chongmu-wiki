@@ -5,24 +5,20 @@ type TableBlockProps = {
 
 export function TableBlock({ headers, rows }: TableBlockProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
-      <table className="w-full text-sm">
-        <thead className="bg-surface-2">
+    <div className="overflow-x-auto border border-excel-grid">
+      <table className="excel-table">
+        <thead>
           <tr>
             {headers.map((header) => (
-              <th key={header} className="px-4 py-2 text-left text-neutral-300">
-                {header}
-              </th>
+              <th key={header}>{header}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-t border-border">
+            <tr key={i}>
               {row.map((cell, j) => (
-                <td key={j} className="px-4 py-2 text-neutral-400">
-                  {cell}
-                </td>
+                <td key={j}>{cell}</td>
               ))}
             </tr>
           ))}

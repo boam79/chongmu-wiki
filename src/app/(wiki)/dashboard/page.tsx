@@ -25,7 +25,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         title={dashboardTitle}
         breadcrumb={topBarBreadcrumb("대시보드", season)}
       />
-      <main className="flex-1 p-10">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-[980px]">
           <DashboardContent season={season} analytics={analytics} />
         </div>

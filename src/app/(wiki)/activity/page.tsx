@@ -30,16 +30,16 @@ export default async function ActivityPage({ searchParams }: PageProps) {
         title="활동 데이터"
         breadcrumb={topBarBreadcrumb("대시보드", season)}
       />
-      <main className="flex-1 p-10">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-[980px]">
           {season === SEASON_2 && !hasData ? (
-            <p className="rounded-xl border border-dashed border-border bg-surface p-8 text-center text-neutral-400">
+            <p className="excel-cell-panel p-8 text-center text-excel-text-muted">
               {SEASON_DISPLAY[SEASON_2].eraName} 활동 데이터가 아직 없습니다.{" "}
               <span className="font-mono text-accent-amber">txt 업로드 후 반영</span>
             </p>
           ) : (
-            <div className="space-y-4">
-              <p className="text-neutral-400">
+            <div className="excel-cell-panel space-y-3 p-6">
+              <p className="text-excel-text-muted">
                 {hasData
                   ? `메시지 ${formatNumber(analytics?.total_messages)}건 · 멤버 ${formatNumber(analytics?.member_count)}명${
                       peakMonth
@@ -48,7 +48,7 @@ export default async function ActivityPage({ searchParams }: PageProps) {
                     }`
                   : "analytics 스냅샷 연동 후 차트가 표시됩니다."}
               </p>
-              <p className="text-sm text-neutral-600">
+              <p className="text-sm text-excel-text-muted">
                 월별·히트맵·토픽·업체 차트는 다음 단계에서 연동 예정 (MVP: 요약 수치만).
               </p>
             </div>

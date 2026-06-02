@@ -24,24 +24,20 @@ export function SeasonSwitcher({ variant = "default" }: SeasonSwitcherProps) {
 
   if (variant === "topbar") {
     return (
-      <div className="flex items-center gap-2">
-        {SEASONS.map(({ n, label, sub }) => {
+      <div className="flex items-center gap-1">
+        {SEASONS.map(({ n, label }) => {
           const active = current === n;
           return (
             <Link
               key={n}
               href={buildSeasonHref(pathname, n)}
-              className={`rounded-full border px-3 py-1 font-mono text-xs transition-colors ${
+              className={`border px-2 py-0.5 text-[10px] transition-colors ${
                 active
-                  ? n === 2
-                    ? "border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan"
-                    : "border-border bg-surface text-white"
-                  : "border-transparent text-neutral-500 hover:border-border hover:bg-surface/50 hover:text-neutral-300"
+                  ? "border-excel-title bg-excel-ribbon-hover font-semibold text-excel-title"
+                  : "border-excel-grid bg-white text-excel-text-muted hover:bg-excel-header"
               }`}
             >
-              {n === 2 && active && "● "}
               {label}
-              <span className="ml-1 opacity-70">{sub}</span>
             </Link>
           );
         })}
@@ -50,21 +46,19 @@ export function SeasonSwitcher({ variant = "default" }: SeasonSwitcherProps) {
   }
 
   return (
-    <div className="mb-6 flex flex-wrap gap-2">
+    <div className="mb-4 flex flex-wrap gap-1">
       {SEASONS.map(({ n, label, sub }) => {
         const active = current === n;
         return (
           <Link
             key={n}
             href={buildSeasonHref(pathname, n)}
-            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-              active
-                ? "border-accent-blue/50 bg-accent-blue/15 text-white"
-                : "border-border text-neutral-500 hover:border-neutral-600 hover:text-neutral-300"
+            className={`excel-sheet-tab px-3 py-1 text-xs ${
+              active ? "active" : "hover:bg-white/80"
             }`}
           >
             {label}
-            <span className="ml-1.5 text-xs font-normal opacity-70">{sub}</span>
+            <span className="ml-1 opacity-70">{sub}</span>
           </Link>
         );
       })}

@@ -1,5 +1,8 @@
 import { Suspense } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { ExcelRibbon } from "@/components/layout/ExcelRibbon";
+import { ExcelSheetTabs } from "@/components/layout/ExcelSheetTabs";
+import { ExcelStatusBar } from "@/components/layout/ExcelStatusBar";
+import { ExcelTitleBar } from "@/components/layout/ExcelTitleBar";
 
 export default function WikiLayout({
   children,
@@ -7,15 +10,16 @@ export default function WikiLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      <Suspense
-        fallback={
-          <aside className="fixed left-0 top-0 z-50 h-screen w-[272px] border-r border-border bg-sidebar/95" />
-        }
-      >
-        <Sidebar />
+    <div className="excel-window">
+      <ExcelTitleBar />
+      <ExcelRibbon />
+      <div className="excel-grid-area flex min-h-0 flex-1 flex-col">{children}</div>
+      <Suspense fallback={<div className="excel-sheet-tabs h-8" />}>
+        <ExcelSheetTabs />
       </Suspense>
-      <div className="ml-[272px] flex min-h-screen flex-col">{children}</div>
+      <Suspense fallback={<div className="excel-status-bar h-6" />}>
+        <ExcelStatusBar />
+      </Suspense>
     </div>
   );
 }

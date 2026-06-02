@@ -6,12 +6,12 @@ import { TableBlock } from "./TableBlock";
 import { TextBlock } from "./TextBlock";
 
 const ACCENT_BORDER: Record<string, string> = {
-  blue: "border-accent-blue/30",
-  cyan: "border-accent-cyan/30",
-  amber: "border-accent-amber/30",
-  red: "border-red-500/40",
-  green: "border-emerald-500/40",
-  purple: "border-purple-500/40",
+  blue: "border-l-excel-title",
+  cyan: "border-l-excel-title",
+  amber: "border-l-accent-amber",
+  red: "border-l-red-600",
+  green: "border-l-emerald-600",
+  purple: "border-l-purple-600",
 };
 
 type ContentBlockProps = {
@@ -58,14 +58,14 @@ export function ContentBlock({ block }: ContentBlockProps) {
     : ACCENT_BORDER.cyan;
 
   const badges = (
-    <div className="mb-3 flex flex-wrap gap-2">
+    <div className="mb-2 flex flex-wrap gap-1">
       {block.is_verified && block.verified_year && (
-        <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-400">
+        <span className="border border-emerald-600 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-700">
           {block.verified_year} 검증
         </span>
       )}
       {block.season_added && block.season_added > 1 && (
-        <span className="rounded-full bg-accent-blue/15 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-accent-blue">
+        <span className="border border-excel-title bg-excel-ribbon-hover px-2 py-0.5 font-mono text-[10px] font-semibold text-excel-title">
           시즌 {block.season_added} 추가
         </span>
       )}
@@ -88,20 +88,23 @@ export function ContentBlock({ block }: ContentBlockProps) {
     case "info_box":
     case "warning": {
       const items = asStringArray(content.items);
-      const variant = block.block_type === "warning" ? "border-red-500/40" : accent;
+      const variant =
+        block.block_type === "warning"
+          ? "border-l-red-600 bg-red-50"
+          : `${accent} bg-excel-ribbon-hover`;
       body = (
-        <div className={`rounded-lg border ${variant} bg-surface p-5`}>
+        <div className={`border border-excel-grid border-l-4 p-4 ${variant}`}>
           {block.title && (
             <h3
               className={`font-semibold ${
-                block.block_type === "warning" ? "text-red-400" : "text-accent-cyan"
+                block.block_type === "warning" ? "text-red-700" : "text-excel-title"
               }`}
             >
               {block.title}
             </h3>
           )}
           {items.length > 0 && (
-            <ul className={`mt-3 space-y-2 text-neutral-300 ${block.title ? "" : "mt-0"}`}>
+            <ul className={`mt-2 space-y-1 text-excel-text ${block.title ? "" : "mt-0"}`}>
               {items.map((item) => (
                 <li key={item} className="flex gap-2">
                   <span className="text-accent-amber">•</span>
@@ -134,7 +137,7 @@ export function ContentBlock({ block }: ContentBlockProps) {
     default:
       body = (
         <InfoBox title={`미지원 블록 (${block.block_type})`}>
-          <pre className="font-mono text-xs text-neutral-500">
+          <pre className="font-mono text-xs text-excel-text-muted">
             {JSON.stringify(content, null, 2)}
           </pre>
         </InfoBox>
@@ -147,7 +150,7 @@ export function ContentBlock({ block }: ContentBlockProps) {
     <section className="wiki-block">
       {badges}
       {block.title && block.block_type !== "info_box" && block.block_type !== "warning" && (
-        <h2 className="mb-4 text-lg font-bold text-white">{block.title}</h2>
+        <h2 className="mb-3 text-base font-bold text-excel-text">{block.title}</h2>
       )}
       {body}
     </section>

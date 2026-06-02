@@ -26,12 +26,14 @@ export function DashboardContent({ season, analytics }: DashboardContentProps) {
 
   if (isSeason2 && !hasData) {
     return (
-      <section className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center">
-        <p className="font-mono text-xs text-accent-cyan">
+      <section className="excel-cell-panel p-8 text-center">
+        <p className="font-mono text-xs text-excel-title">
           {SEASON_DISPLAY[SEASON_2].tag}
         </p>
-        <h2 className="mt-3 text-xl font-bold text-white">아직 반영된 데이터가 없습니다</h2>
-        <p className="mt-3 text-neutral-400">
+        <h2 className="mt-3 text-lg font-bold text-excel-text">
+          아직 반영된 데이터가 없습니다
+        </h2>
+        <p className="mt-3 text-excel-text-muted">
           KakaoTalk 내보내기 txt를 Admin에서 업로드하면 누적 집계가 반영됩니다.
         </p>
         <p className="mt-2 font-mono text-sm text-accent-amber">txt 업로드 후 반영</p>
@@ -76,18 +78,18 @@ export function DashboardContent({ season, analytics }: DashboardContentProps) {
 
   return (
     <>
-      <section className="rounded-2xl border border-border bg-surface p-8">
-        <p className="font-mono text-xs text-accent-cyan">{seasonMeta.tag}</p>
-        <h2 className="mt-2 text-2xl font-bold text-white">{seasonMeta.title}</h2>
+      <section className="excel-cell-panel p-6">
+        <p className="font-mono text-xs text-excel-title">{seasonMeta.tag}</p>
+        <h2 className="mt-2 text-xl font-bold text-excel-text">{seasonMeta.title}</h2>
         {topMember && (
-          <p className="mt-3 text-neutral-400">
+          <p className="mt-3 text-excel-text-muted">
             최다 발언:{" "}
-            <span className="text-neutral-200">{topMember.name}</span> (
+            <span className="font-semibold text-excel-text">{topMember.name}</span> (
             {formatNumber(topMember.count)}건)
           </p>
         )}
         {!hasData && season === SEASON_1 && (
-          <p className="mt-3 text-neutral-500">
+          <p className="mt-3 text-excel-text-muted">
             시즌 1 스냅샷이 없으면 파이프라인 실행 후 표시됩니다:{" "}
             <code className="font-mono text-sm text-accent-amber">
               python scripts/process.py KakaoTalkChats.txt --season 1
@@ -95,21 +97,21 @@ export function DashboardContent({ season, analytics }: DashboardContentProps) {
           </p>
         )}
         {analytics?.snapshot_date && (
-          <p className="mt-2 font-mono text-xs text-neutral-600">
+          <p className="mt-2 font-mono text-xs text-excel-text-muted">
             스냅샷: {analytics.snapshot_date}
             {isSeason2 ? " · 누적 merge" : " · 아카이브"}
           </p>
         )}
       </section>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-2 grid gap-px border border-excel-grid sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-xl border border-border bg-surface-2 p-5"
+            className="excel-cell-panel bg-excel-header p-4"
           >
-            <p className="text-sm text-neutral-500">{card.label}</p>
-            <p className="mt-2 font-mono text-2xl font-bold text-accent-cyan">
+            <p className="text-xs text-excel-text-muted">{card.label}</p>
+            <p className="mt-1 font-mono text-xl font-bold text-excel-title">
               {card.value}
             </p>
           </div>

@@ -27,9 +27,9 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${notoSansKR.variable} ${jetbrainsMono.variable} dark`}
+      className={`${notoSansKR.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className="min-h-screen bg-background font-sans">
         {children}
       </body>
     </html>

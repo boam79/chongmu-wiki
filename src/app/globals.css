@@ -1,19 +1,147 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0e1117;
-  --color-sidebar: #161b27;
-  --color-surface: #161b27;
-  --color-surface-2: #1e2535;
-  --color-border: #2a3347;
-  --color-accent-blue: #3b82f6;
-  --color-accent-cyan: #06b6d4;
-  --color-accent-amber: #f59e0b;
-  --font-sans: var(--font-noto-sans-kr), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* Excel light theme */
+  --color-background: #ffffff;
+  --color-sidebar: #f2f2f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #f2f2f2;
+  --color-border: #d4d4d4;
+  --color-excel-title: #217346;
+  --color-excel-title-dark: #185c37;
+  --color-excel-ribbon: #f3f3f3;
+  --color-excel-ribbon-hover: #e2efda;
+  --color-excel-grid: #d4d4d4;
+  --color-excel-header: #f2f2f2;
+  --color-excel-header-col: #e6e6e6;
+  --color-excel-status: #217346;
+  --color-excel-tab-active: #ffffff;
+  --color-excel-tab-inactive: #e6e6e6;
+  --color-excel-text: #000000;
+  --color-excel-text-muted: #595959;
+  --color-accent-blue: #217346;
+  --color-accent-cyan: #185c37;
+  --color-accent-amber: #c65911;
+  --font-sans: "Segoe UI", Calibri, var(--font-noto-sans-kr), "Malgun Gothic", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: Consolas, "Courier New", var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
 body {
   background-color: var(--color-background);
-  color: #e5e7eb;
+  color: var(--color-excel-text);
+}
+
+/* Excel window chrome */
+.excel-window {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-background);
+  font-family: var(--font-sans);
+  font-size: 11pt;
+}
+
+.excel-title-bar {
+  background: linear-gradient(180deg, var(--color-excel-title) 0%, var(--color-excel-title-dark) 100%);
+  color: #ffffff;
+  user-select: none;
+}
+
+.excel-ribbon {
+  background: var(--color-excel-ribbon);
+  border-bottom: 1px solid var(--color-excel-grid);
+}
+
+.excel-formula-bar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-excel-grid);
+}
+
+.excel-name-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-excel-grid);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.excel-formula-input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-excel-grid);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.excel-grid-area {
+  background: var(--color-surface);
+  background-image:
+    linear-gradient(var(--color-excel-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-excel-grid) 1px, transparent 1px);
+  background-size: 80px 24px;
+}
+
+.excel-cell-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-excel-grid);
+  box-shadow: none;
+}
+
+.excel-sheet-tabs {
+  background: var(--color-excel-header);
+  border-top: 1px solid var(--color-excel-grid);
+}
+
+.excel-sheet-tab {
+  background: var(--color-excel-tab-inactive);
+  border: 1px solid var(--color-excel-grid);
+  border-bottom: none;
+  border-radius: 0;
+  font-size: 11px;
+  color: var(--color-excel-text);
+}
+
+.excel-sheet-tab.active {
+  background: var(--color-excel-tab-active);
+  border-bottom: 2px solid var(--color-excel-title);
+  font-weight: 600;
+}
+
+.excel-status-bar {
+  background: var(--color-excel-status);
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.excel-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11pt;
+}
+
+.excel-table th,
+.excel-table td {
+  border: 1px solid var(--color-excel-grid);
+  padding: 4px 8px;
+}
+
+.excel-table thead th {
+  background: var(--color-excel-header);
+  font-weight: 600;
+  text-align: left;
+  color: var(--color-excel-text);
+}
+
+.excel-table tbody td {
+  background: var(--color-surface);
+  color: var(--color-excel-text);
+}
+
+.excel-table tbody tr:hover td {
+  background: var(--color-excel-ribbon-hover);
+}
+
+.wiki-block {
+  padding: 12px 16px;
+  margin-bottom: 2px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-excel-grid);
 }
