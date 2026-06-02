@@ -44,7 +44,7 @@ yarn-error.log*
 # data pipeline (large / generated)
 KakaoTalkChats.txt
 messages.jsonl
-analytics/
+analytics/**/messages.jsonl
 
 # python
 __pycache__/

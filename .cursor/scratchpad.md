@@ -16,7 +16,8 @@
 | `scripts/process.py` L1 | ✅ + 테스트 16/16 |
 | Next.js 앱 | ✅ scaffold, build OK, Sidebar(272px) |
 | Supabase `chongmu-wiki` | ✅ `ibzxzhepsorsqqdcbfgo`, 4 tables + RLS |
-| Vercel `chongmu-wiki` 프로젝트 | ⏳ 미배포 (Netlify 레퍼런스 사용 중) |
+| GitHub | ✅ https://github.com/boam79/chongmu-wiki (`main`, initial push) |
+| Vercel `chongmu-wiki` 프로젝트 | ✅ https://chongmu-wiki.vercel.app (GitHub `boam79/chongmu-wiki` 연동) |
 
 ### 제품 목표 (PRD One-liner)
 KakaoTalk 오픈채팅 163K 메시지에서 **파싱 가능한 데이터를 최대 추출** → 총무·경영지원 실무 **데이터 기반 위키** (`chongmu-wiki.com`).
@@ -221,6 +222,14 @@ Track C (Web)      Next.js scaffold → layout → dashboard/activity
 - Layer 1 파서 + 16개 unittest 전부 통과
 - fixture 50줄 → 유효 메시지 33건 (미디어·시스템·중복 1건 제거)
 - **다음 태스크**: P1-3 (`--dry`, messages.jsonl CLI) — Robin 검증 후 진행
+
+### Vercel 배포 완료 (2026-06-02, Executor)
+- `vercel link --project chongmu-wiki` → `prj_kHswHmWsS6KE2pw8XmCHGNLJUz6H`
+- Production: **https://chongmu-wiki.vercel.app** (`dpl_GT23cqcVqY9nB7BkRhpPK6YcSVcv`, READY)
+- Vercel MCP: `list_projects`, `get_project`, `list_deployments`, `web_fetch_vercel_url` 확인 / `deploy_to_vercel`는 CLI 안내
+- Production env (Vercel): `NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_URL`, `REVALIDATE_SECRET`, `VERCEL_REVALIDATE_TOKEN`, `VERCEL_PROJECT_URL`
+- **미설정 (로컬 `.env.local`도 비어 있음)**: `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_SERVICE_KEY` → admin 업로드·Storage용 Dashboard 수동 입력
+- **수동 남은 것**: Git 연동 확인( Settings → Git ), Preview/Development env 복제, PRD 도메인 `chongmu-wiki.com`
 
 ### Robin에게 필요한 결정 (블로커)
 1. **Supabase**: 신규 `chongmu-wiki` 프로젝트 생성해도 될까요? (region: Seoul)

@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import type { AnalyticsSnapshot } from "@/lib/supabase/types";
 
-export async function getLatestAnalytics(season?: number) {
+export async function getLatestAnalytics(
+  season?: number,
+): Promise<AnalyticsSnapshot | null> {
   const supabase = await createClient();
 
   let query = supabase

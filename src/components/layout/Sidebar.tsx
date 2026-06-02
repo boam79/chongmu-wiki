@@ -87,7 +87,14 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-border px-5 py-4 text-[11px] text-neutral-500">
-        레퍼런스: chongmu-wiki-06011322.netlify.app
+        <a
+          href="https://chongmu-wiki.vercel.app"
+          className="hover:text-neutral-300"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          chongmu-wiki.vercel.app
+        </a>
       </div>
     </aside>
   );
