@@ -1,10 +1,13 @@
 import { TopBar } from "@/components/layout/TopBar";
 import { ContentBlock } from "@/components/wiki/ContentBlock";
+import { SeasonWikiBanner } from "@/components/wiki/SeasonWikiBanner";
 import {
+  filterBlocksForSeason,
   getPublishedSection,
   getSectionBlocks,
   getSectionBreadcrumb,
 } from "@/lib/wiki";
+import { parseSeasonParam, topBarBreadcrumb } from "@/lib/seasons";
 import { notFound } from "next/navigation";
 
 const SLUGS = [
@@ -27,10 +30,17 @@ export function generateStaticParams() {
 
 type WikiSlugPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ season?: string }>;
 };
 
-export default async function WikiSlugPage({ params }: WikiSlugPageProps) {
+export default async function WikiSlugPage({
+  params,
+  searchParams,
+}: WikiSlugPageProps) {
   const { slug } = await params;
+  const query = await searchParams;
+  const season = parseSeasonParam(query.season);
+
   if (!SLUGS.includes(slug as (typeof SLUGS)[number])) {
     notFound();
   }
@@ -40,14 +50,22 @@ export default async function WikiSlugPage({ params }: WikiSlugPageProps) {
     notFound();
   }
 
-  const blocks = await getSectionBlocks(section.id);
-  const breadcrumb = getSectionBreadcrumb(section);
+  const blocks = filterBlocksForSeason(
+    await getSectionBlocks(section.id),
+    season,
+  );
+  const breadcrumb = topBarBreadcrumb(
+    getSectionBreadcrumb(section),
+    season,
+  );
 
   return (
     <>
       <TopBar title={section.title} breadcrumb={breadcrumb} />
       <main className="flex-1 p-10">
         <div className="mx-auto max-w-[980px] space-y-10">
+          <SeasonWikiBanner season={season} />
+
           {section.description && (
             <p className="text-[15px] leading-relaxed text-neutral-400">
               {section.description}
@@ -56,7 +74,9 @@ export default async function WikiSlugPage({ params }: WikiSlugPageProps) {
 
           {blocks.length === 0 ? (
             <p className="rounded-lg border border-border bg-surface p-6 text-neutral-400">
-              이 섹션의 콘텐츠를 준비 중입니다.
+              {season === 2
+                ? "이 섹션의 시즌 2 콘텐츠를 준비 중입니다. 시즌 1 아카이브는 시즌 1 탭에서 확인할 수 있습니다."
+                : "이 섹션의 콘텐츠를 준비 중입니다."}
             </p>
           ) : (
             blocks.map((block) => <ContentBlock key={block.id} block={block} />)

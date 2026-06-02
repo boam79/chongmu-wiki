@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import {
+  buildSeasonHref,
+  parseSeasonParam,
+  sidebarBrandSubtitle,
+} from "@/lib/seasons";
 
 const NAV = [
   {
@@ -35,6 +40,9 @@ const NAV = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const season = parseSeasonParam(searchParams.get("season") ?? undefined);
+  const brandSubtitle = sidebarBrandSubtitle(season);
 
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-[272px] flex-col border-r border-border bg-sidebar/95 backdrop-blur-md">
@@ -53,7 +61,7 @@ export function Sidebar() {
           </div>
         </div>
         <p className="mt-2 font-mono text-[10.5px] font-semibold text-neutral-500">
-          실무왕 김총무 · 시즌 1 아카이브
+          {brandSubtitle}
         </p>
       </div>
 
@@ -70,7 +78,7 @@ export function Sidebar() {
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={buildSeasonHref(item.href, season)}
                   className={`mb-0.5 flex items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] font-medium transition-colors ${
                     active
                       ? "bg-accent-blue/15 text-white"

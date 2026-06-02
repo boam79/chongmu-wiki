@@ -35,6 +35,15 @@ export async function getPublishedSection(
   return data;
 }
 
+export function filterBlocksForSeason(
+  blocks: WikiBlockRow[],
+  season: number,
+): WikiBlockRow[] {
+  return blocks.filter(
+    (block) => block.season_added == null || block.season_added <= season,
+  );
+}
+
 export async function getSectionBlocks(
   sectionId: string,
 ): Promise<WikiBlockRow[]> {

@@ -40,3 +40,22 @@ export function seasonTabText(season: number): { label: string; sub: string } {
     season === SEASON_2 ? SEASON_DISPLAY[SEASON_2] : SEASON_DISPLAY[SEASON_1];
   return { label: d.tabLabel, sub: d.tabSub };
 }
+
+export function buildSeasonHref(path: string, season: number): string {
+  return `${path}?season=${season}`;
+}
+
+export function sidebarBrandSubtitle(season: SeasonNumber): string {
+  const d = SEASON_DISPLAY[season];
+  if (season === SEASON_2) {
+    return `${d.eraName} · ${d.tabLabel}`;
+  }
+  return `${d.eraName} · ${d.tabLabel} ${d.tabSub}`;
+}
+
+export function topBarBreadcrumb(base: string, season: SeasonNumber): string {
+  if (season === SEASON_2) {
+    return `${SEASON_DISPLAY[SEASON_2].tag} · ${base}`;
+  }
+  return base;
+}

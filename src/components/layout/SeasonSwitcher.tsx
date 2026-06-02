@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { SEASON_1, SEASON_2, SEASON_DISPLAY } from "@/lib/seasons";
+import { SEASON_1, SEASON_2, SEASON_DISPLAY, buildSeasonHref } from "@/lib/seasons";
 
 const SEASONS = [
   { n: SEASON_1, ...SEASON_DISPLAY[SEASON_1] },
@@ -16,10 +16,6 @@ const SEASONS = [
 type SeasonSwitcherProps = {
   variant?: "default" | "topbar";
 };
-
-function buildSeasonHref(pathname: string, season: number): string {
-  return `${pathname}?season=${season}`;
-}
 
 export function SeasonSwitcher({ variant = "default" }: SeasonSwitcherProps) {
   const pathname = usePathname();

@@ -1,7 +1,7 @@
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { TopBar } from "@/components/layout/TopBar";
 import { getLatestAnalytics } from "@/lib/analytics";
-import { parseSeasonParam, SEASON_2, SEASON_DISPLAY } from "@/lib/seasons";
+import { parseSeasonParam, SEASON_2, SEASON_DISPLAY, topBarBreadcrumb } from "@/lib/seasons";
 
 export const revalidate = 3600;
 
@@ -21,7 +21,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <TopBar title={dashboardTitle} breadcrumb="대시보드" />
+      <TopBar
+        title={dashboardTitle}
+        breadcrumb={topBarBreadcrumb("대시보드", season)}
+      />
       <main className="flex-1 p-10">
         <div className="mx-auto max-w-[980px]">
           <DashboardContent season={season} analytics={analytics} />
