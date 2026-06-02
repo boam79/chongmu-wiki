@@ -5,6 +5,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import {
   buildSeasonHref,
   parseSeasonParam,
+  SEASON_2,
+  SEASON_DISPLAY,
   sidebarBrandSubtitle,
 } from "@/lib/seasons";
 
@@ -94,15 +96,38 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="border-t border-border px-5 py-4 text-[11px] text-neutral-500">
-        <a
-          href="https://chongmu-wiki.vercel.app"
-          className="hover:text-neutral-300"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="border-t border-border px-3 py-3">
+        <p className="px-2 pb-1 font-mono text-[10px] font-extrabold uppercase tracking-wider text-neutral-500">
+          관리
+        </p>
+        <Link
+          href="/admin/upload"
+          className={`mb-2 flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
+            pathname.startsWith("/admin")
+              ? "bg-accent-cyan/15 text-white"
+              : season === SEASON_2
+                ? "text-accent-cyan hover:bg-surface-2 hover:text-white"
+                : "text-neutral-500 hover:bg-surface-2 hover:text-neutral-300"
+          }`}
         >
-          chongmu-wiki.vercel.app
-        </a>
+          <span className="w-5 text-center text-[15px]">📤</span>
+          <span>
+            데이터 업로드
+            <span className="mt-0.5 block text-[10px] font-normal text-neutral-500">
+              {SEASON_DISPLAY[SEASON_2].tabSub} · 누적 merge
+            </span>
+          </span>
+        </Link>
+        <p className="px-2 pt-1 text-[11px] text-neutral-500">
+          <a
+            href="https://chongmu-wiki.vercel.app"
+            className="hover:text-neutral-300"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            chongmu-wiki.vercel.app
+          </a>
+        </p>
       </div>
     </aside>
   );

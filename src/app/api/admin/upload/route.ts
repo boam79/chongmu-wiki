@@ -6,6 +6,12 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/types";
+import {
+  checkUploadRateLimit,
+  validateTxtUpload,
+  verifyAdminUploadAuth,
+} from "@/lib/security/admin-upload";
+import { applyApiCors, corsPreflightResponse } from "@/lib/security/cors";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -39,35 +45,74 @@ function parseAnalyticsFromStdout(stdout: string): BasicAnalytics | null {
   return null;
 }
 
+function jsonResponse(
+  request: Request,
+  body: Record<string, unknown>,
+  status: number,
+): NextResponse {
+  return applyApiCors(request, NextResponse.json(body, { status }));
+}
+
+export async function OPTIONS(request: Request) {
+  const preflight = corsPreflightResponse(request);
+  return preflight ?? new NextResponse(null, { status: 405 });
+}
+
 export async function POST(request: Request) {
   try {
+    const rate = checkUploadRateLimit(request);
+    if (!rate.ok) {
+      return jsonResponse(request, { ok: false, message: rate.message }, rate.status);
+    }
+
     const formData = await request.formData();
+    const auth = verifyAdminUploadAuth(request, formData);
+    if (!auth.ok) {
+      return jsonResponse(request, { ok: false, message: auth.message }, auth.status);
+    }
+
     const seasonRaw = formData.get("season");
     const file = formData.get("file");
 
     const season = Number(seasonRaw);
     if (!Number.isInteger(season) || season < 2) {
-      return NextResponse.json(
-        { ok: false, message: "season은 2 이상이어야 합니다. 시즌 1은 아카이브(불변)입니다." },
-        { status: 400 },
+      return jsonResponse(
+        request,
+        {
+          ok: false,
+          message: "season은 2 이상이어야 합니다. 시즌 1은 아카이브(불변)입니다.",
+        },
+        400,
       );
     }
 
     if (!(file instanceof File) || file.size === 0) {
-      return NextResponse.json(
+      return jsonResponse(
+        request,
         { ok: false, message: "txt 파일이 필요합니다." },
-        { status: 400 },
+        400,
       );
     }
 
-    if (!file.name.toLowerCase().endsWith(".txt")) {
-      return NextResponse.json(
-        { ok: false, message: "KakaoTalk 내보내기 .txt 파일만 허용됩니다." },
-        { status: 400 },
-      );
+    const fileCheck = validateTxtUpload(file);
+    if (!fileCheck.ok) {
+      return jsonResponse(request, { ok: false, message: fileCheck.message }, fileCheck.status);
     }
 
-    const admin = createAdminClient();
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch {
+      return jsonResponse(
+        request,
+        {
+          ok: false,
+          message:
+            "SUPABASE_SERVICE_ROLE_KEY가 설정되지 않았습니다. Vercel → Project Settings → Environment Variables에서 Supabase service_role 키(SUPABASE_SERVICE_ROLE_KEY)를 Production·Preview에 추가한 뒤 재배포하세요.",
+        },
+        503,
+      );
+    }
     const workDir = await mkdtemp(join(tmpdir(), "chongmu-upload-"));
     const txtPath = join(workDir, "upload.txt");
     const existingJsonlPath = join(workDir, "existing.jsonl");
@@ -105,21 +150,23 @@ export async function POST(request: Request) {
       );
 
       if (result.status !== 0) {
-        return NextResponse.json(
+        return jsonResponse(
+          request,
           {
             ok: false,
             message: "파싱 실패",
             detail: result.stderr || result.stdout,
           },
-          { status: 500 },
+          500,
         );
       }
 
       const analytics = parseAnalyticsFromStdout(result.stdout ?? "");
       if (!analytics) {
-        return NextResponse.json(
+        return jsonResponse(
+          request,
           { ok: false, message: "analytics JSON을 파싱하지 못했습니다." },
-          { status: 500 },
+          500,
         );
       }
 
@@ -140,9 +187,10 @@ export async function POST(request: Request) {
 
       for (const upload of uploads) {
         if (upload.error) {
-          return NextResponse.json(
+          return jsonResponse(
+            request,
             { ok: false, message: `Storage 업로드 실패: ${upload.error.message}` },
-            { status: 500 },
+            500,
           );
         }
       }
@@ -169,36 +217,57 @@ export async function POST(request: Request) {
         time_analysis: analytics.time_analysis,
         recent_batch: {
           uploaded_at: new Date().toISOString(),
-          source_file: file.name,
+          source_file: file.name.split(/[/\\]/).pop() ?? file.name,
           storage_txt: txtRemote,
         },
         is_active: true,
       });
 
       if (insertError) {
-        return NextResponse.json(
+        return jsonResponse(
+          request,
           { ok: false, message: `DB insert 실패: ${insertError.message}` },
-          { status: 500 },
+          500,
         );
       }
 
       revalidatePath("/dashboard");
       revalidatePath("/activity");
 
-      return NextResponse.json({
-        ok: true,
-        season,
-        total_messages: analytics.total_messages,
-        member_count: analytics.member_count,
-        first_date: analytics.first_date,
-        last_date: analytics.last_date,
-        storage: { txt: txtRemote, jsonl: jsonlRemote },
-      });
+      const response = jsonResponse(
+        request,
+        {
+          ok: true,
+          season,
+          total_messages: analytics.total_messages,
+          member_count: analytics.member_count,
+          first_date: analytics.first_date,
+          last_date: analytics.last_date,
+          storage: { txt: txtRemote, jsonl: jsonlRemote },
+        },
+        200,
+      );
+
+      const uploadSecret = process.env.ADMIN_UPLOAD_SECRET?.trim();
+      if (uploadSecret) {
+        response.cookies.set("admin_upload_auth", uploadSecret, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/",
+          maxAge: 60 * 60 * 12,
+        });
+      }
+
+      return response;
     } finally {
       await rm(workDir, { recursive: true, force: true });
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ ok: false, message }, { status: 500 });
+    const raw = error instanceof Error ? error.message : "Unknown error";
+    const message = raw.includes("SUPABASE_SERVICE_ROLE_KEY")
+      ? "SUPABASE_SERVICE_ROLE_KEY가 설정되지 않았습니다. Vercel Environment Variables를 확인하세요."
+      : raw;
+    return jsonResponse(request, { ok: false, message }, 500);
   }
 }

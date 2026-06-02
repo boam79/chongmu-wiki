@@ -112,7 +112,8 @@ npm run build
 | `SUPABASE_URL` | ✅ | |
 | `REVALIDATE_SECRET` / `VERCEL_REVALIDATE_TOKEN` | ✅ | |
 | `VERCEL_PROJECT_URL` | ✅ | `https://chongmu-wiki.vercel.app` |
-| `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_SERVICE_KEY` | ❌ 수동 | 로컬·Vercel 모두 비어 있으면 [Supabase API](https://supabase.com/dashboard/project/ibzxzhepsorsqqdcbfgo/settings/api)에서 service_role 추가 |
+| `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_SERVICE_KEY` | ❌ 수동 | 업로드·Storage 필수 — [Supabase API](https://supabase.com/dashboard/project/ibzxzhepsorsqqdcbfgo/settings/api) service_role |
+| `ADMIN_UPLOAD_SECRET` | 선택 | 설정 시 `/admin/upload`에서 비밀번호 필요 (미설정이면 공개 업로드) |
 
 ## Project docs
 
