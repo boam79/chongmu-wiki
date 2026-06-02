@@ -66,6 +66,10 @@ python3 scripts/process.py KakaoTalkChats.txt --season 1 --upload
 
 ```bash
 node --env-file=.env.local -e "const {createClient}=require('@supabase/supabase-js');createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY).from('wiki_sections').select('slug').then(r=>console.log(r.data?.length,'sections',r.error||''));"
+
+# 위키 본문 블록 시드 (9섹션, Netlify 레퍼런스 기반)
+node scripts/seed_wiki_blocks.mjs
+# 또는 Supabase migration: supabase/migrations/20260602130000_seed_wiki_blocks.sql
 ```
 
 ## Requirements

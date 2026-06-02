@@ -4,8 +4,13 @@ export type WikiContentBlock = {
   id: string;
   section_id: string;
   block_type: WikiBlockType;
+  block_order: number | null;
+  title: string | null;
   content: Record<string, unknown>;
-  sort_order: number;
+  accent_color: string | null;
+  is_verified: boolean | null;
+  verified_year: number | null;
+  season_added: number | null;
 };
 
 export type WikiSection = {

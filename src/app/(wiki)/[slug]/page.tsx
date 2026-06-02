@@ -1,4 +1,10 @@
 import { TopBar } from "@/components/layout/TopBar";
+import { ContentBlock } from "@/components/wiki/ContentBlock";
+import {
+  getPublishedSection,
+  getSectionBlocks,
+  getSectionBreadcrumb,
+} from "@/lib/wiki";
 import { notFound } from "next/navigation";
 
 const SLUGS = [
@@ -12,18 +18,6 @@ const SLUGS = [
   "ai",
   "community",
 ] as const;
-
-const TITLES: Record<(typeof SLUGS)[number], string> = {
-  vendors: "업체 비교",
-  negotiation: "협상 · 예산절감",
-  fleet: "법인차량 관리",
-  facility: "시설 · 안전 · 소방",
-  legal: "법무 · 등기 · 라이선스",
-  hr: "급여 · 복리후생",
-  checklist: "체크리스트 · 캘린더",
-  ai: "AI 도구 활용",
-  community: "커뮤니티 이야기",
-};
 
 export const revalidate = 86400;
 
@@ -41,17 +35,32 @@ export default async function WikiSlugPage({ params }: WikiSlugPageProps) {
     notFound();
   }
 
-  const title = TITLES[slug as (typeof SLUGS)[number]];
+  const section = await getPublishedSection(slug);
+  if (!section) {
+    notFound();
+  }
+
+  const blocks = await getSectionBlocks(section.id);
+  const breadcrumb = getSectionBreadcrumb(section);
 
   return (
     <>
-      <TopBar title={title} breadcrumb="실무 지식" />
+      <TopBar title={section.title} breadcrumb={breadcrumb} />
       <main className="flex-1 p-10">
-        <div className="mx-auto max-w-[980px]">
-          <p className="text-neutral-400">
-            위키 콘텐츠 블록은 Supabase <code className="text-accent-amber">wiki_content_blocks</code>에서
-            로드됩니다.
-          </p>
+        <div className="mx-auto max-w-[980px] space-y-10">
+          {section.description && (
+            <p className="text-[15px] leading-relaxed text-neutral-400">
+              {section.description}
+            </p>
+          )}
+
+          {blocks.length === 0 ? (
+            <p className="rounded-lg border border-border bg-surface p-6 text-neutral-400">
+              이 섹션의 콘텐츠를 준비 중입니다.
+            </p>
+          ) : (
+            blocks.map((block) => <ContentBlock key={block.id} block={block} />)
+          )}
         </div>
       </main>
     </>
