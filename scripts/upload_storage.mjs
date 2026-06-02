@@ -36,14 +36,14 @@ const files = [
   },
 ];
 
-async function uploadFile(localPath, remotePath, contentType) {
+async function uploadFile(localPath, remotePath, contentType, upsert = true) {
   if (!existsSync(localPath)) {
     console.warn(`skip (not found): ${localPath}`);
     return null;
   }
   const body = readFileSync(localPath);
   const { data, error } = await supabase.storage.from(BUCKET).upload(remotePath, body, {
-    upsert: true,
+    upsert,
     contentType,
     cacheControl: "31536000",
   });
@@ -67,7 +67,14 @@ async function main() {
   }
 
   for (const f of files) {
-    const result = await uploadFile(f.local, f.remote, f.contentType);
+    const immutableArchive =
+      season === 1 && f.remote.endsWith("KakaoTalkChats.txt");
+    const result = await uploadFile(
+      f.local,
+      f.remote,
+      f.contentType,
+      !immutableArchive,
+    );
     if (result) {
       console.log(`OK ${result.remotePath} (${(result.bytes / 1024 / 1024).toFixed(2)} MB)`);
     }

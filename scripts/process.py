@@ -76,6 +76,119 @@ def write_messages_jsonl(messages: list[dict], output: Path | str) -> None:
             handle.write(json.dumps(message, ensure_ascii=False) + "\n")
 
 
+def load_messages_jsonl(path: Path | str) -> list[dict]:
+    """Load messages from JSONL (empty list if missing)."""
+    jsonl_path = Path(path)
+    if not jsonl_path.is_file():
+        return []
+    messages: list[dict] = []
+    with jsonl_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            messages.append(json.loads(line))
+    return messages
+
+
+def merge_messages(existing: list[dict], incoming: list[dict]) -> list[dict]:
+    """Append incoming messages, deduplicating by hash (existing order preserved)."""
+    seen = {message["hash"] for message in existing}
+    merged = list(existing)
+    for message in incoming:
+        if message["hash"] in seen:
+            continue
+        seen.add(message["hash"])
+        merged.append(message)
+    return merged
+
+
+KOREAN_DT = re.compile(
+    r"^(\d{4})년\s*(\d+)월\s*(\d+)일\s*(오전|오후)\s*(\d+):(\d+)$"
+)
+WEEKDAY_KO = ("월", "화", "수", "목", "금", "토", "일")
+
+
+def parse_korean_datetime(dt_str: str) -> tuple[str | None, int | None, str | None]:
+    """Return (iso_date, hour_0_23, weekday_ko) from KakaoTalk datetime string."""
+    match = KOREAN_DT.match(dt_str.strip())
+    if not match:
+        return None, None, None
+
+    year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
+    ampm, hour12 = match.group(4), int(match.group(5))
+    if ampm == "오전":
+        hour = 0 if hour12 == 12 else hour12
+    else:
+        hour = 12 if hour12 == 12 else hour12 + 12
+
+    from datetime import date
+
+    parsed_date = date(year, month, day)
+    iso_date = parsed_date.isoformat()
+    weekday = WEEKDAY_KO[parsed_date.weekday()]
+    return iso_date, hour, weekday
+
+
+def compute_basic_analytics(messages: list[dict], season: int) -> dict:
+    """Layer 1 stats for analytics_snapshots (MVP slice)."""
+    from collections import Counter
+    from datetime import date
+
+    sender_counts: Counter[str] = Counter()
+    hourly: Counter[int] = Counter()
+    weekday: Counter[str] = Counter()
+    monthly: Counter[str] = Counter()
+    dates: list[date] = []
+
+    for message in messages:
+        sender_counts[message["sender"]] += 1
+        iso_date, hour, wd = parse_korean_datetime(message["dt"])
+        if iso_date:
+            parsed = date.fromisoformat(iso_date)
+            dates.append(parsed)
+            monthly[f"{parsed.year:04d}-{parsed.month:02d}"] += 1
+        if hour is not None:
+            hourly[hour] += 1
+        if wd:
+            weekday[wd] += 1
+
+    first_date = min(dates).isoformat() if dates else None
+    last_date = max(dates).isoformat() if dates else None
+    top_members = [
+        {"name": name, "count": count}
+        for name, count in sender_counts.most_common(10)
+    ]
+    monthly_stats = dict(sorted(monthly.items()))
+    peak_hour = max(hourly, key=hourly.get) if hourly else None
+
+    season_labels = {
+        1: "시즌 1 · 아카이브",
+        2: "시즌 2 · 실무왕 박총무",
+    }
+
+    return {
+        "season": season,
+        "season_label": season_labels.get(season, f"시즌 {season}"),
+        "season_start": first_date,
+        "season_end": last_date if season == 1 else None,
+        "snapshot_date": date.today().isoformat(),
+        "first_date": first_date,
+        "last_date": last_date,
+        "total_messages": len(messages),
+        "member_count": len(sender_counts),
+        "active_months": len(monthly_stats),
+        "top_members": top_members,
+        "monthly_stats": monthly_stats,
+        "time_analysis": {
+            "hourly": {str(h): hourly.get(h, 0) for h in range(24)},
+            "weekday": {wd: weekday.get(wd, 0) for wd in WEEKDAY_KO},
+            "peak_hour": peak_hour,
+        },
+        "is_active": True,
+    }
+
+
 def iter_messages(source: Path | str) -> Iterator[dict]:
     """Stream Layer 1 messages without loading the full file into a list."""
     path = Path(source)
@@ -152,6 +265,84 @@ def upload_file_to_storage(
     return {"path": remote_path, "bytes": len(body), "response": payload}
 
 
+def seed_analytics_snapshot(analytics: dict) -> dict:
+    """Insert active analytics_snapshots row (deactivates prior rows for season)."""
+    import os
+    import urllib.error
+    import urllib.request
+
+    base = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get(
+        "SUPABASE_SERVICE_ROLE_KEY", ""
+    )
+    if not base or not key:
+        raise RuntimeError(
+            "SUPABASE_URL and SUPABASE_SERVICE_KEY must be set for --seed-db"
+        )
+
+    season = analytics["season"]
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "apikey": key,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+
+    deactivate_url = (
+        f"{base}/rest/v1/analytics_snapshots?season=eq.{season}&is_active=eq.true"
+    )
+    deactivate_req = urllib.request.Request(
+        deactivate_url,
+        data=json.dumps({"is_active": False}).encode("utf-8"),
+        headers={**headers, "Prefer": "return=minimal"},
+        method="PATCH",
+    )
+    try:
+        with urllib.request.urlopen(deactivate_req, timeout=60):
+            pass
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Deactivate failed ({exc.code}): {detail}") from exc
+
+    row = {
+        "season": analytics["season"],
+        "season_label": analytics["season_label"],
+        "season_start": analytics["season_start"],
+        "season_end": analytics.get("season_end"),
+        "snapshot_date": analytics["snapshot_date"],
+        "first_date": analytics["first_date"],
+        "last_date": analytics["last_date"],
+        "total_messages": analytics["total_messages"],
+        "member_count": analytics["member_count"],
+        "active_months": analytics["active_months"],
+        "top_members": analytics["top_members"],
+        "monthly_stats": analytics.get("monthly_stats"),
+        "time_analysis": analytics["time_analysis"],
+        "is_active": True,
+    }
+    if season == 1:
+        row["recent_batch"] = {
+            "source": "KakaoTalkChats.txt",
+            "archived": True,
+        }
+
+    insert_url = f"{base}/rest/v1/analytics_snapshots"
+    insert_req = urllib.request.Request(
+        insert_url,
+        data=json.dumps(row, ensure_ascii=False).encode("utf-8"),
+        headers=headers,
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(insert_req, timeout=60) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Insert failed ({exc.code}): {detail}") from exc
+
+    return payload[0] if isinstance(payload, list) else payload
+
+
 def upload_season_artifacts(
     season: int,
     source_txt: Path,
@@ -198,6 +389,21 @@ def main() -> None:
         default=None,
         help="Output JSONL path (default: analytics/season-N/messages.jsonl)",
     )
+    parser.add_argument(
+        "--merge",
+        default=None,
+        help="Existing messages.jsonl to merge with (season 2+ append mode)",
+    )
+    parser.add_argument(
+        "--print-analytics",
+        action="store_true",
+        help="Print basic analytics JSON to stdout after processing",
+    )
+    parser.add_argument(
+        "--seed-db",
+        action="store_true",
+        help="Upsert analytics_snapshots via Supabase REST (needs service key)",
+    )
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]
@@ -220,10 +426,32 @@ def main() -> None:
             print(f"last={messages[-1]['dt']} sender={messages[-1]['sender']}")
         return
 
-    messages = parse_layer1(source)
+    incoming = parse_layer1(source)
+    if args.merge:
+        existing = load_messages_jsonl(args.merge)
+        messages = merge_messages(existing, incoming)
+        print(
+            f"merge: existing={len(existing)} incoming={len(incoming)} "
+            f"merged={len(messages)}"
+        )
+    else:
+        messages = incoming
+
     output.parent.mkdir(parents=True, exist_ok=True)
     write_messages_jsonl(messages, output)
     print(f"wrote {len(messages)} messages -> {output}")
+
+    analytics = compute_basic_analytics(messages, args.season)
+
+    if args.print_analytics:
+        print("__ANALYTICS_JSON__" + json.dumps(analytics, ensure_ascii=False))
+
+    if args.seed_db:
+        inserted = seed_analytics_snapshot(analytics)
+        print(
+            f"seed-db: season={args.season} total_messages="
+            f"{inserted.get('total_messages', analytics['total_messages'])}"
+        )
 
     if args.upload:
         if args.season == 1:
