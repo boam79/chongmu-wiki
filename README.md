@@ -113,7 +113,18 @@ npm run build
 | `REVALIDATE_SECRET` / `VERCEL_REVALIDATE_TOKEN` | ✅ | |
 | `VERCEL_PROJECT_URL` | ✅ | `https://chongmu-wiki.vercel.app` |
 | `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_SERVICE_KEY` | ❌ 수동 | 업로드·Storage 필수 — [Supabase API](https://supabase.com/dashboard/project/ibzxzhepsorsqqdcbfgo/settings/api) service_role |
-| `ADMIN_UPLOAD_SECRET` | 선택 | 설정 시 `/admin/upload`에서 비밀번호 필요 (미설정이면 공개 업로드) |
+| `ADMIN_UPLOAD_SECRET` | ✅ **필수 (Production)** | 미설정 시 `/admin`·업로드 API **503** (fail-closed). Edge Function `season-archive-upload`에도 동일 값을 Secrets에 등록 |
+| `EDGE_UPLOAD_SECRET` | — | (별칭 없음) Edge는 `ADMIN_UPLOAD_SECRET` 사용 |
+
+## Security
+
+- **공개 위키**: Supabase RLS — `is_published = true` 섹션·블록만 anon SELECT.
+- **채팅 아카이브 Storage** (`chat-exports`): 비공개 버킷, `service_role`만 쓰기·읽기. authenticated SELECT 정책 제거됨.
+- **관리 업로드**: Production에서 `ADMIN_UPLOAD_SECRET` 필수 (`x-admin-upload-secret` 헤더 또는 form `secret`). 50MB·`.txt`만. IP당 분당 5회 rate limit(인스턴스 단위).
+- **ISR 갱신**: `POST /api/revalidate` — `Authorization: Bearer <REVALIDATE_SECRET>` 또는 `?secret=`.
+- **클라이언트**: `service_role` / `SUPABASE_SERVICE_*`는 **서버 전용** — `NEXT_PUBLIC_` 접두사 금지.
+- **헤더**: `next.config.ts` — CSP baseline, HSTS, `X-Frame-Options`, `nosniff` 등.
+- **XSS**: 위키 블록은 React 텍스트 이스케이프만 사용 (`dangerouslySetInnerHTML` 없음).
 
 ## Project docs
 

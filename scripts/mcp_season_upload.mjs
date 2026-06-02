@@ -20,9 +20,14 @@ const file = flag("--file", null);
 const projectUrl =
   process.env.SUPABASE_URL || "https://ibzxzhepsorsqqdcbfgo.supabase.co";
 const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const uploadSecret = process.env.ADMIN_UPLOAD_SECRET?.trim();
 
 if (!file || !anonKey) {
   console.error("Need --file and SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)");
+  process.exit(1);
+}
+if (!uploadSecret) {
+  console.error("Need ADMIN_UPLOAD_SECRET for season-archive-upload Edge Function");
   process.exit(1);
 }
 
@@ -46,6 +51,7 @@ async function invoke(payload) {
     headers: {
       Authorization: `Bearer ${anonKey}`,
       apikey: anonKey,
+      "x-admin-upload-secret": uploadSecret,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),

@@ -135,7 +135,7 @@ export default function AdminUploadPage() {
         <div>
           <label htmlFor="upload-secret" className="block text-sm text-neutral-400">
             업로드 비밀번호{" "}
-            <span className="text-neutral-600">(ADMIN_UPLOAD_SECRET 설정 시)</span>
+            <span className="text-neutral-600">(Production 필수 · Vercel ADMIN_UPLOAD_SECRET)</span>
           </label>
           <input
             id="upload-secret"
@@ -144,7 +144,7 @@ export default function AdminUploadPage() {
             disabled={statusKind === "loading"}
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
-            placeholder="선택 · Vercel env와 동일하게 입력"
+            placeholder="Vercel ADMIN_UPLOAD_SECRET과 동일"
             className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white placeholder:text-neutral-600 disabled:opacity-50"
           />
         </div>
